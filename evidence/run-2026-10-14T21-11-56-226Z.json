@@ -1,0 +1,92 @@
+{
+  "recordedAt": "2026-10-14T21:11:56.226Z",
+  "workstation": {
+    "processor": "AMD Ryzen 9 7950X3D 16-Core Processor          ",
+    "platform": "win32",
+    "release": "10.0.26300"
+  },
+  "model": "Qwen3-4B-Instruct-2507-Q4_K_M",
+  "methodology": "Two original quest texts, Turkish and German, sequential non-streaming live model requests; repeat first Turkish input to inspect cache. No mocks in this recording.",
+  "qualityScope": "Syntax-preservation checks only. Translation fluency and correctness require human review. Single-run timings, not a comparative hardware benchmark.",
+  "before": {
+    "configured": true,
+    "model": "Qwen3-4B-Instruct-2507-Q4_K_M",
+    "metrics": {
+      "attempts": 0,
+      "accepted": 0,
+      "rejected": 0,
+      "cacheHits": 0,
+      "cachedTranslations": 0
+    },
+    "cacheScope": "Bounded in-memory cache; cleared when this server restarts."
+  },
+  "records": [
+    {
+      "example": "forest",
+      "source": "§6The Clockwork Forest§r\nCollect %s copper gears and speak to {guide}. Read $(l:quests/forest)the field journal$() before opening the gate.",
+      "language": "tr",
+      "repeat": false,
+      "status": 502,
+      "requestMs": 26,
+      "output": {
+        "error": "Inference endpoint returned HTTP 503."
+      }
+    },
+    {
+      "example": "forest",
+      "source": "§6The Clockwork Forest§r\nCollect %s copper gears and speak to {guide}. Read $(l:quests/forest)the field journal$() before opening the gate.",
+      "language": "de",
+      "repeat": false,
+      "status": 502,
+      "requestMs": 15,
+      "output": {
+        "error": "Inference endpoint returned HTTP 503."
+      }
+    },
+    {
+      "example": "forge",
+      "source": "§bA Forge for Everyone§r\nCraft %1$s with {helper}. {@pagebreak}Keep the $(item)copper hammer$() in your inventory; visit https://example.org/quest-notes for the next step.",
+      "language": "tr",
+      "repeat": false,
+      "status": 502,
+      "requestMs": 15,
+      "output": {
+        "error": "Inference endpoint returned HTTP 503."
+      }
+    },
+    {
+      "example": "forge",
+      "source": "§bA Forge for Everyone§r\nCraft %1$s with {helper}. {@pagebreak}Keep the $(item)copper hammer$() in your inventory; visit https://example.org/quest-notes for the next step.",
+      "language": "de",
+      "repeat": false,
+      "status": 502,
+      "requestMs": 15,
+      "output": {
+        "error": "Inference endpoint returned HTTP 503."
+      }
+    },
+    {
+      "example": "forest",
+      "source": "§6The Clockwork Forest§r\nCollect %s copper gears and speak to {guide}. Read $(l:quests/forest)the field journal$() before opening the gate.",
+      "language": "tr",
+      "repeat": true,
+      "status": 502,
+      "requestMs": 17,
+      "output": {
+        "error": "Inference endpoint returned HTTP 503."
+      }
+    }
+  ],
+  "after": {
+    "configured": true,
+    "model": "Qwen3-4B-Instruct-2507-Q4_K_M",
+    "metrics": {
+      "attempts": 5,
+      "accepted": 0,
+      "rejected": 5,
+      "cacheHits": 0,
+      "cachedTranslations": 0
+    },
+    "cacheScope": "Bounded in-memory cache; cleared when this server restarts."
+  }
+}

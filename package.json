@@ -1,0 +1,14 @@
+{
+  "name": "questbridge-amd",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reviewable quest localisation using an open model on AMD infrastructure",
+  "license": "MIT",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "demo:record": "node record-demo.mjs"
+  }
+}

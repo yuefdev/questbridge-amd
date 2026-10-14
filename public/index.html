@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QuestBridge · Reviewable game localisation</title>
+<style>
+  :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#0b111c;color:#e7ecf5}*{box-sizing:border-box}body{margin:0}main{max-width:1040px;margin:auto;padding:48px 24px}h1{font-size:clamp(36px,6vw,58px);letter-spacing:-2px;margin:14px 0}h2{font-size:20px}.eyebrow{color:#69dec2;font:700 12px monospace;letter-spacing:2px}.muted{color:#a2b1c6;line-height:1.6}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:32px}.card{border:1px solid #25334a;background:#111b2b;border-radius:18px;padding:24px}label{display:block;margin:18px 0 8px;font-weight:600}textarea,select{width:100%;background:#0b1321;color:#eef3fc;border:1px solid #38465e;border-radius:8px;padding:12px;font:inherit}textarea{height:180px;resize:vertical}button{background:#69dec2;color:#10211e;border:0;border-radius:8px;padding:12px 18px;font:600 15px system-ui;cursor:pointer;margin-top:18px}button:disabled{opacity:.55;cursor:wait}.secondary{background:#243650;color:#dfe8f5;margin-right:8px}.pill{display:inline-block;padding:6px 10px;border-radius:24px;background:#22344b;color:#c4d4e8;font:12px monospace}pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}#result{min-height:100px;font-size:19px}#metrics{font:13px monospace;color:#b8c9de}#error{color:#ffb6ad;white-space:pre-wrap}a{color:#69dec2}footer{margin-top:24px;font-size:13px}.note{border-left:3px solid #69dec2;padding-left:14px}@media(max-width:700px){.grid{grid-template-columns:1fr}main{padding:28px 18px}}
+</style>
+<main>
+  <div class="eyebrow">AMD ACT III · ORIGINAL MIT-LICENSED PROTOTYPE</div>
+  <h1>A quest in your language.<br>A game that stays intact.</h1>
+  <p class="muted">Open-model localisation with protected game tokens, explicit validation and a cache you can verify. Two audiences: Turkish and German players.</p>
+  <span class="pill" id="status">Checking live inference…</span>
+  <div class="grid">
+    <section class="card">
+      <h2>1. Original quest</h2>
+      <button class="secondary" id="sample-one">Forest quest</button><button class="secondary" id="sample-two">Forge quest</button>
+      <label for="source">English text</label>
+      <textarea id="source" maxlength="4000">§6The Clockwork Forest§r\nCollect %s copper gears and speak to {guide}. Read $(l:quests/forest)the field journal$() before opening the gate.</textarea>
+      <label for="language">Player language</label>
+      <select id="language"><option value="tr">Türkçe · Turkish</option><option value="de">Deutsch · German</option></select>
+      <button id="translate">Translate with live model</button>
+      <p class="muted">Quest text is sent to your configured inference endpoint. API keys stay on the server. Review every translation before shipping it.</p>
+    </section>
+    <section class="card" aria-live="polite">
+      <h2>2. Format-checked draft · review required</h2>
+      <span class="pill" id="result-status">No inference has run</span>
+      <pre id="result">Run a translation to see real output here.</pre>
+      <p id="error" role="alert"></p>
+      <pre id="metrics"></pre>
+      <button class="secondary" id="download" disabled>Download this evidence</button>
+      <p class="muted note">Missing, duplicated, reordered or invented game tokens cause rejection. No fabricated fallback translations. Repeat the same input to demonstrate the cache.</p>
+    </section>
+  </div>
+  <footer class="muted">QuestBridge is new standalone work. It does not bundle or relicense the existing AGPL AutoTranslation mod. Runtime cache is bounded and lasts for this server session. Translation quality remains subject to human review.</footer>
+</main>
+<script>
+  const $=id=>document.getElementById(id); let evidence;
+  const samples=[
+    '§6The Clockwork Forest§r\nCollect %s copper gears and speak to {guide}. Read $(l:quests/forest)the field journal$() before opening the gate.',
+    '§bA Forge for Everyone§r\nCraft %1$s with {helper}. {@pagebreak}Keep the $(item)copper hammer$() in your inventory; visit https://example.org/quest-notes for the next step.'
+  ];
+  $('source').value=samples[0];
+  $('sample-one').onclick=()=>{$('source').value=samples[0]};
+  $('sample-two').onclick=()=>{$('source').value=samples[1]};
+  async function refresh(){const r=await fetch('/api/status');const s=await r.json();$('status').textContent=s.configured?'Live inference configured · '+s.model:'Live inference unavailable · configure endpoint and model';}
+  refresh().catch(()=>{$('status').textContent='Server unavailable'});
+  $('translate').onclick=async()=>{
+    $('translate').disabled=true; $('download').disabled=true; $('error').textContent=''; evidence=undefined;
+    $('result-status').textContent='Waiting for inference / validation…'; $('result').textContent=''; $('metrics').textContent='';
+    const input={text:$('source').value,language:$('language').value};
+    try{
+      const response=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)});
+      const result=await response.json(); if(!response.ok)throw new Error(result.error);
+      $('result').textContent=result.translation;
+      $('result-status').textContent=result.cacheHit?'Cache hit · linguistic review pending':'Live draft · linguistic review pending';
+      $('metrics').textContent=JSON.stringify({model:result.model,protectedTokens:result.protectedCount,inferenceMs:result.inferenceMs,inputTokens:result.tokens.input,outputTokens:result.tokens.output,cacheHit:result.cacheHit,generatedAt:result.generatedAt},null,2);
+      evidence={input,result}; $('download').disabled=false;
+    }catch(error){$('result-status').textContent='No accepted output';$('error').textContent=error.message;}
+    finally{$('translate').disabled=false;}
+  };
+  $('download').onclick=()=>{if(!evidence)return;const u=URL.createObjectURL(new Blob([JSON.stringify(evidence,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=u;a.download='questbridge-evidence.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
+</script>
+</html>
