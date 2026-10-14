@@ -36,6 +36,8 @@
 </main>
 <script>
   const $=id=>document.getElementById(id); let evidence;
+  const access=new URLSearchParams(location.hash.slice(1)).get('access');
+  const auth=access?{Authorization:'Bearer '+access}:{};
   const samples=[
     '§6The Clockwork Forest§r\nCollect %s copper gears and speak to {guide}. Read $(l:quests/forest)the field journal$() before opening the gate.',
     '§bA Forge for Everyone§r\nCraft %1$s with {helper}. {@pagebreak}Keep the $(item)copper hammer$() in your inventory; visit https://example.org/quest-notes for the next step.'
@@ -43,14 +45,14 @@
   $('source').value=samples[0];
   $('sample-one').onclick=()=>{$('source').value=samples[0]};
   $('sample-two').onclick=()=>{$('source').value=samples[1]};
-  async function refresh(){const r=await fetch('/api/status');const s=await r.json();$('status').textContent=s.configured?'Live inference configured · '+s.model:'Live inference unavailable · configure endpoint and model';}
+  async function refresh(){const r=await fetch('/api/status',{headers:auth});const s=await r.json();if(!r.ok)throw new Error(s.error);$('status').textContent=s.configured?'Live inference configured · '+s.model:'Live inference unavailable · configure endpoint and model';}
   refresh().catch(()=>{$('status').textContent='Server unavailable'});
   $('translate').onclick=async()=>{
     $('translate').disabled=true; $('download').disabled=true; $('error').textContent=''; evidence=undefined;
     $('result-status').textContent='Waiting for inference / validation…'; $('result').textContent=''; $('metrics').textContent='';
     const input={text:$('source').value,language:$('language').value};
     try{
-      const response=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)});
+      const response=await fetch('/api/translate',{method:'POST',headers:{...auth,'Content-Type':'application/json'},body:JSON.stringify(input)});
       const result=await response.json(); if(!response.ok)throw new Error(result.error);
       $('result').textContent=result.translation;
       $('result-status').textContent=result.cacheHit?'Cache hit · linguistic review pending':'Live draft · linguistic review pending';

@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { timingSafeEqual } from 'node:crypto';
 import { createLocaliser, LocalisationError } from './localisation.mjs';
 
 const endpoint = process.env.AMD_ENDPOINT || '';
@@ -14,6 +15,7 @@ const localiser = createLocaliser({ endpoint, model: process.env.AMD_MODEL || ''
 const page = await readFile(new URL('./public/index.html', import.meta.url));
 const port = Number(process.env.PORT || 4186);
 const host = process.env.HOST || '127.0.0.1';
+const accessToken = process.env.DEMO_ACCESS_TOKEN || '';
 
 function json(response, status, data) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -24,6 +26,13 @@ const server = createServer(async (request, response) => {
   response.setHeader('X-Content-Type-Options', 'nosniff');
   try {
     const path = new URL(request.url, 'http://localhost').pathname;
+    if (path.startsWith('/api/') && accessToken) {
+      const actual = Buffer.from(request.headers.authorization || '');
+      const expected = Buffer.from(`Bearer ${accessToken}`);
+      if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+        throw new LocalisationError('Use the private demo access link.', 401);
+      }
+    }
     if (request.method === 'GET' && path === '/') {
       response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'" });
       response.end(page);

@@ -57,7 +57,9 @@ docker run --rm -p 127.0.0.1:4186:4186 \
   -e AMD_ENDPOINT -e AMD_MODEL -e AMD_API_KEY questbridge-amd
 ```
 
-The server binds to loopback outside the container. This demo has no public-user authentication; keep it local or behind your authenticated hosting gateway.
+The server binds to loopback outside the container. Keep it local, or configure the reviewer-access gate before sharing an endpoint.
+
+For a shared prototype demonstration, set `DEMO_ACCESS_TOKEN` to an independently generated access token and provide the reviewer a link with `#access=TOKEN`. The browser sends it as an API bearer header; it is not an inference-provider credential. Never publish the token in this repository. The live reviewer endpoint remains available only while its host and tunnel processes are running.
 
 ## Project relationship and originality
 
